@@ -1,0 +1,27 @@
+# Render Blueprint for Captain Dumbell backend.
+# Push this repo to GitHub, then in Render: New + → Blueprint → pick this repo.
+services:
+  - type: web
+    name: captain-dumbell-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: PORT
+        value: "10000"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_FILE
+        value: /var/data/captain-dumbell.db
+      - key: CORS_ORIGIN
+        sync: false   # set this in the Render dashboard to your Vercel URL
+    disk:
+      name: captain-dumbell-data
+      mountPath: /var/data
+      sizeGB: 1

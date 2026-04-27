@@ -249,26 +249,32 @@ export function PoseTrainer({ userId }: PoseTrainerProps) {
         </Card>
 
         <div className="space-y-4">
-          <Card>
-            <CardHeader>
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-3">
               <CardTitle className="text-base">Live guidance</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4">
               <div className="rounded-md bg-secondary p-4">
-                <p className="text-sm text-secondary-foreground">Current feedback</p>
-                <p className="mt-1 text-lg font-semibold">{feedback}</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Current feedback
+                </p>
+                <p className="mt-2 break-words text-base font-semibold leading-snug text-secondary-foreground sm:text-lg">
+                  {feedback}
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="rounded-md border border-border/70 p-3">
-                  <p className="text-muted-foreground">Reps</p>
-                  <p className="text-2xl font-semibold">{reps}</p>
+                <div className="min-w-0 rounded-md border border-border/70 p-3">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Reps</p>
+                  <p className="mt-1 truncate text-2xl font-semibold tabular-nums">{reps}</p>
                 </div>
-                <div className="rounded-md border border-border/70 p-3">
-                  <p className="text-muted-foreground">Time</p>
-                  <p className="text-2xl font-semibold">{durationSeconds}s</p>
+                <div className="min-w-0 rounded-md border border-border/70 p-3">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Time</p>
+                  <p className="mt-1 truncate text-2xl font-semibold tabular-nums">
+                    {formatDuration(durationSeconds)}
+                  </p>
                 </div>
               </div>
-              <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button className="flex-1" onClick={saveSession} disabled={saving || reps === 0}>
                   <Save />
                   {saving ? "Saving..." : "Save session"}
@@ -286,6 +292,15 @@ export function PoseTrainer({ userId }: PoseTrainerProps) {
       </div>
     </div>
   );
+}
+
+function formatDuration(totalSeconds: number): string {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  return `${m}:${String(sec).padStart(2, "0")}`;
 }
 
 function toPoseFrame(landmarks: NormalizedLandmark[]): Partial<PoseFrame> | null {

@@ -10,26 +10,21 @@ interface StatsPanelProps {
   sessions: WorkoutSessionRow[];
 }
 
-function formatDuration(totalSeconds: number): string {
-  const s = Math.max(0, Math.floor(totalSeconds));
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
-  return `${m}:${String(sec).padStart(2, "0")}`;
-}
-
 export function StatsPanel({ currentReps, durationSeconds, calories, sessions }: StatsPanelProps) {
   const recent = sessions.slice(0, 4);
-  const caloriesText = Number.isFinite(calories) ? `${calories.toFixed(1)} kcal` : "0.0 kcal";
-  const durationText = formatDuration(durationSeconds);
+
+  // Note: reps/time/calories values are intentionally not rendered here.
+  // Per design, the live guidance area shows only the metric icons (logos).
+  void currentReps;
+  void durationSeconds;
+  void calories;
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
       <div className="grid gap-3 sm:grid-cols-3">
-        <MetricCard icon={History} label="Reps completed" value={String(currentReps)} />
-        <MetricCard icon={Timer} label="Session time" value={durationText} />
-        <MetricCard icon={Flame} label="Calories burned" value={caloriesText} />
+        <MetricCard icon={History} ariaLabel="Reps completed" />
+        <MetricCard icon={Timer} ariaLabel="Session time" />
+        <MetricCard icon={Flame} ariaLabel="Calories burned" />
       </div>
       <Card>
         <CardHeader className="pb-3">
@@ -65,18 +60,17 @@ export function StatsPanel({ currentReps, durationSeconds, calories, sessions }:
   );
 }
 
-function MetricCard({ icon: Icon, label, value }: { icon: typeof Flame; label: string; value: string }) {
+function MetricCard({ icon: Icon, ariaLabel }: { icon: typeof Flame; ariaLabel: string }) {
   return (
     <Card>
-      <CardContent className="flex items-center gap-3 p-4">
-        <div className="shrink-0 rounded-md bg-secondary p-2 text-secondary-foreground">
-          <Icon className="h-5 w-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            {label}
-          </p>
-          <p className="mt-0.5 truncate text-xl font-semibold tabular-nums sm:text-2xl">{value}</p>
+      <CardContent className="flex items-center justify-center p-6">
+        <div
+          className="rounded-md bg-secondary p-3 text-secondary-foreground"
+          role="img"
+          aria-label={ariaLabel}
+          title={ariaLabel}
+        >
+          <Icon className="h-7 w-7" />
         </div>
       </CardContent>
     </Card>

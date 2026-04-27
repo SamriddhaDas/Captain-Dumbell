@@ -45,6 +45,7 @@ export function PoseTrainer({ userId }: PoseTrainerProps) {
   const [feedback, setFeedback] = useState("Allow camera access to start guided training.");
   const [reps, setReps] = useState(0);
   const [durationSeconds, setDurationSeconds] = useState(0);
+  const [timerActive, setTimerActive] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -57,8 +58,21 @@ export function PoseTrainer({ userId }: PoseTrainerProps) {
     trackerRef.current = createTracker(exercise);
     setReps(0);
     setDurationSeconds(0);
+    setTimerActive(false);
     startTimeRef.current = null;
   }, [exercise]);
+
+  // Independent real-time timer: ticks every second while active,
+  // decoupled from pose detection so reps and time stay in sync in real time.
+  useEffect(() => {
+    if (!timerActive) return;
+    const interval = window.setInterval(() => {
+      if (startTimeRef.current) {
+        setDurationSeconds(Math.max(0, Math.floor((Date.now() - startTimeRef.current) / 1000)));
+      }
+    }, 250);
+    return () => window.clearInterval(interval);
+  }, [timerActive]);
 
   useEffect(() => {
     void loadProfile();
@@ -141,11 +155,13 @@ export function PoseTrainer({ userId }: PoseTrainerProps) {
       drawSkeleton(ctx, landmarks, canvas.width, canvas.height);
       const poseFrame = toPoseFrame(landmarks);
       if (poseFrame && isPoseFrameComplete(poseFrame)) {
-        if (!startTimeRef.current) startTimeRef.current = Date.now();
+        if (!startTimeRef.current) {
+          startTimeRef.current = Date.now();
+          setTimerActive(true);
+        }
         const next = trackerRef.current.process(poseFrame);
         setFeedback(next.feedback);
         setReps(next.reps);
-        setDurationSeconds(Math.max(0, Math.floor((Date.now() - startTimeRef.current) / 1000)));
       }
     } else {
       setFeedback("No body detected. Step back until your full form is visible.");
@@ -197,6 +213,7 @@ export function PoseTrainer({ userId }: PoseTrainerProps) {
     setReps(0);
     setDurationSeconds(0);
     startTimeRef.current = Date.now();
+    setTimerActive(true);
     setFeedback("Set reset. Resume with smooth controlled reps.");
   }
 

@@ -32,19 +32,29 @@ export function estimateCalories(exercise: keyof typeof EXERCISE_LABELS, reps: n
   return Number((reps * repFactor + timeFactor).toFixed(2));
 }
 
+/** Minimum MediaPipe visibility score required for a landmark to be trusted. */
+const POSE_MIN_VISIBILITY = 0.4;
+
+/**
+ * Returns true only when every landmark in the frame is present AND has a
+ * MediaPipe visibility score above POSE_MIN_VISIBILITY.
+ *
+ * Previously only checked for landmark existence — low-confidence points
+ * (occluded or partially off-screen) passed through and produced unreliable
+ * angles that caused phantom reps.
+ */
 export function isPoseFrameComplete(frame: Partial<PoseFrame>): frame is PoseFrame {
-  return Boolean(
-    frame.leftShoulder &&
-      frame.rightShoulder &&
-      frame.leftElbow &&
-      frame.rightElbow &&
-      frame.leftWrist &&
-      frame.rightWrist &&
-      frame.leftHip &&
-      frame.rightHip &&
-      frame.leftKnee &&
-      frame.rightKnee &&
-      frame.leftAnkle &&
-      frame.rightAnkle,
-  );
+  const required: Array<keyof PoseFrame> = [
+    "leftShoulder", "rightShoulder",
+    "leftElbow",    "rightElbow",
+    "leftWrist",    "rightWrist",
+    "leftHip",      "rightHip",
+    "leftKnee",     "rightKnee",
+    "leftAnkle",    "rightAnkle",
+  ];
+
+  return required.every((key) => {
+    const point = frame[key];
+    return point !== undefined && (point.visibility ?? 0) >= POSE_MIN_VISIBILITY;
+  });
 }
